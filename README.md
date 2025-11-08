@@ -9,20 +9,46 @@
 3. 重新定义 `rules`，通过 15 条规则串联全部规则集，末尾使用 `MATCH,PROXY` 兜底。
 
 ## 代理组定义
-所有代理组都会继承脚本中的 `exclude-filter`：`(?i)GB|Traffic|Expire|Premium|频道|订阅|ISP|流量|到期|重置`，避免消耗流量或套餐节点被自动选入。下表列出了每个分组的细节：
+脚本现在把代理结构拆成“基础分组 + 地区分组”两部分，所有 `include-all` 类分组都会带上统一的 `exclude-filter`：`(?i)GB|Traffic|Expire|Premium|频道|订阅|ISP|流量|到期|重置`，避免把流量包节点加入自动选择。
 
-| 名称 | 类型 | 图标 | include-all | 过滤器 | interval | proxies | 说明 |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| PROXY | select | https://testingcf.jsdelivr.net/gh/Orz-3/mini@master/Color/Static.png | true | — | — | AUTO / HK AUTO / SG AUTO / JP AUTO / US AUTO | 用户手动选择的主出口，作为其他规则的兜底。 |
-| AUTO | url-test | https://testingcf.jsdelivr.net/gh/Orz-3/mini@master/Color/Urltest.png | true | — | 300s | 自动收集到的全部节点 | 全局自动测速，延迟最低者优先。 |
-| AIGC | select | https://testingcf.jsdelivr.net/gh/Orz-3/mini@master/Color/OpenAI.png | — | — | — | SG AUTO / JP AUTO / US AUTO | 专供 OpenAI、Copilot、Claude、Bard、Bing 等 AI 服务。 |
-| Telegram | select | https://testingcf.jsdelivr.net/gh/Orz-3/mini@master/Color/Telegram.png | — | — | — | HK / SG / JP / US AUTO | Telegram/MTProto 优选，保留多地区备份。 |
-| Google | select | https://testingcf.jsdelivr.net/gh/Orz-3/mini@master/Color/Google.png | — | — | — | HK / SG / JP / US AUTO | Google 相关域名/地址流向，避免走国内直连。 |
-| HK AUTO | url-test | https://testingcf.jsdelivr.net/gh/Orz-3/mini@master/Color/HK.png | true | `(?i)香港|Hong Kong|HK|🇭🇰` | 300s | 匹配到的香港节点 | 区域自动测速，供手动/其他分组引用。 |
-| SG AUTO | url-test | https://testingcf.jsdelivr.net/gh/Orz-3/mini@master/Color/SG.png | true | `(?i)新加坡|Singapore|🇸🇬` | 300s | 匹配到的新加坡节点 | 同上，锁定新加坡。 |
-| JP AUTO | url-test | https://testingcf.jsdelivr.net/gh/Orz-3/mini@master/Color/JP.png | true | `(?i)日本|Japan|🇯🇵` | 300s | 匹配到的日本节点 | 同上，锁定日本。 |
-| US AUTO | url-test | https://testingcf.jsdelivr.net/gh/Orz-3/mini@master/Color/US.png | true | `(?i)美国|USA|🇺🇸` | 300s | 匹配到的美国节点 | 同上，锁定美国。 |
-| GLOBAL | select | https://testingcf.jsdelivr.net/gh/Orz-3/mini@master/Color/Global.png | true | — | — | AUTO / HK / SG / JP / US AUTO | 备选全局代理组，可供特定规则或手动选择。 |
+- 基础分组固定 6 个（PROXY/AUTO/AIGC/Telegram/Google/GLOBAL），负责常见场景调度。
+- 地区分组成对出现：`地区`（select 手动挑选） + `地区 AUTO`（url-test 自动测速）。当脚本检测到订阅中有对应节点才会写入；若缺少节点则整个分组直接省略。
+- “其他”分组会把未命中任何地区关键词的节点统统接管，确保长尾地区也有单独的入口。
+
+> 检测逻辑基于 `config.proxies` 中的节点名称。如果订阅只提供 `proxy-providers` 而暂未给出具体节点，脚本会自动退回旧的 `include-all + filter` 方案，此时代码无法判断哪些地区为空，分组会全部显示。
+
+### 基础分组
+
+| 名称 | 类型 | 关键字段 | 说明 |
+| --- | --- | --- | --- |
+| PROXY | select | `include-all: true`，`proxies = AUTO + 动态地区组（地区与地区 AUTO，去重）` | 用户主用出站。即使不进入地区分组也能直接在此选择 AUTO 或特定地区。 |
+| AUTO | url-test | `include-all: true`，`interval: 300s` | 全局自动测速，延迟最低者优先。 |
+| AIGC | select | `proxies = {SG/JP/US/Korea/India/Malaysia/OTHER AUTO} ∩ 可用组`，若均不存在则回落到 `PROXY` | 专供 OpenAI、Copilot、Claude、Bard、Bing 等 AI 服务。 |
+| Telegram | select | `proxies = {HK/SG/JP/US/Korea/OTHER AUTO} ∩ 可用组`，无可用项时指向 `PROXY` | Telegram / MTProto 优选出口。 |
+| Google | select | 同 Telegram，优先使用 HK/SG/JP/US/Korea/Other 的 AUTO 组 | Google 域名和 IP 的专用出口。 |
+| GLOBAL | select | `include-all: true`，`proxies = AUTO + 所有地区 AUTO` | 作为备用全局出站，保留所有区域的自动测速结果。 |
+
+### 地区分组
+
+每个地区都包含一对分组：
+- `地区`：`select` 类型，首个选项为 `地区 AUTO`，其余为脚本在订阅中识别出的真实节点，方便手动锁定。
+- `地区 AUTO`：`url-test` 类型，仅包含同地区节点，300 秒测速一次。
+- 仅当脚本在订阅节点名称中匹配到对应关键词时才会把该对分组写入配置；否则整对分组都会被省略（不会显示在客户端里）。
+
+包含的地区与关键词如下：
+
+| 地区 | 分组名称 | 匹配关键词（filter） | 说明 |
+| --- | --- | --- | --- |
+| 香港 | `HK` / `HK AUTO` | `(?i)香港|Hong Kong|HK|🇭🇰` | 识别所有香港节点，供 Telegram/Google 等优先选用。 |
+| 新加坡 | `SG` / `SG AUTO` | `(?i)新加坡|Singapore|🇸🇬` | 添加非 AUTO 组后可在 SG 内部手动切换具体节点。 |
+| 日本 | `JP` / `JP AUTO` | `(?i)日本|Japan|🇯🇵` | 同上。 |
+| 美国 | `US` / `US AUTO` | `(?i)美国|USA|US|🇺🇸` | 同上。 |
+| 马来西亚 | `Malaysia` / `Malaysia AUTO` | `(?i)马来|Malaysia|MY|🇲🇾` | 新增地区，方便 AIGC 或其他需求使用东南亚节点。 |
+| 印度 | `India` / `India AUTO` | `(?i)印度|India|IN|🇮🇳` | 新增地区。 |
+| 韩国 | `Korea` / `Korea AUTO` | `(?i)韩国|Korea|South Korea|KR|🇰🇷` | 新增地区。 |
+| 其他 | `OTHER` / `OTHER AUTO` | `(?i).*`（配合 `exclude-filter` 排除上述所有地区） | 收拢未命中任何地区关键词的节点，保持长尾地区可用；同样会在没有节点时自动隐藏。 |
+
+所有地区 AUTO 组都会使用和基础组一致的 `exclude-filter`，避免把 GB/Traffic/Expire 等节点加入测速列表。
 
 ## 规则集订阅（rule-providers）
 脚本首先确保 `config['rule-providers']` 存在，再使用 `Object.assign` 将以下 14 个订阅写入/覆盖。所有订阅的公共属性：`type: http`、`format: yaml`、`interval: 86400` 秒，并写入 `./ruleset/*.yaml` 本地缓存。
@@ -88,6 +114,7 @@ AIGC 相关规则优先，Telegram/Google 次之，随后是全局非大陆与�
 ## 自定义建议
 - 需要添加新的服务时，可在 `rule-providers` 里新增订阅并在 `rules` 中插入相应条目，注意排在既有规则前，以免被更宽泛的规则抢先匹配。
 - 若节点命名习惯不同，可适当修改 `exclude-filter` 或区域 `filter`，避免漏选或误选。
+- 地区分组在 `buding.js` 顶部的 `regionBlueprints` 数组维护，新增/删除地区只需增改对应的图标与关键词，同时“其他”分组会自动把剩余节点全部收入。
 - `AUTO`/区域 `url-test` 默认 300 秒测速一次，可根据网络情况调整。较低的间隔会增加流量消耗。
 
 脚本的完整逻辑位于 `buding.js`，通过 `return config;` 将覆写结果交回 Mihomo，便于与原订阅进行拼接或覆盖。
