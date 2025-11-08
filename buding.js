@@ -23,12 +23,16 @@ function main(config) {
   const regionKeywordPattern = regionBlueprints.map((item) => item.pattern).join("|");
   const otherExcludeFilter = `(?i)${BAD_KEYWORDS.join("|")}${regionKeywordPattern ? `|${regionKeywordPattern}` : ""}`;
 
+  if (Array.isArray(config.proxies)) {
+    config.proxies = config.proxies.filter(
+      (proxy) => proxy && typeof proxy.name === "string" && !BAD_REGEX.test(proxy.name)
+    );
+  }
+
   const proxyNames = Array.isArray(config.proxies)
-    ? config.proxies
-        .map((proxy) => proxy && proxy.name)
-        .filter((name) => typeof name === "string")
+    ? config.proxies.map((proxy) => proxy && proxy.name).filter((name) => typeof name === "string")
     : [];
-  const usableProxyNames = proxyNames.filter((name) => !BAD_REGEX.test(name));
+  const usableProxyNames = proxyNames;
   const canInspectProxies = usableProxyNames.length > 0;
   const remainingNames = canInspectProxies ? new Set(usableProxyNames) : null;
 
