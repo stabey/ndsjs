@@ -10,7 +10,7 @@ function main(config) {
     createRegionTemplate("SG", `${ICON_BASE}/SG.png`, ["新加坡", "Singapore", "🇸🇬"]),
     createRegionTemplate("JP", `${ICON_BASE}/JP.png`, ["日本", "Japan", "🇯🇵"]),
     createRegionTemplate("US", `${ICON_BASE}/US.png`, ["美国", "USA", "US", "🇺🇸"]),
-    createRegionTemplate("Malaysia", `${ICON_BASE}/MY.png`, ["马来", "Malaysia", "MY", "🇲🇾"]),
+    createRegionTemplate("Taiwan", `${ICON_BASE}/TW.png`, ["台湾", "台灣", "Taiwan", "TW", "🇹🇼"]),
     createRegionTemplate("India", `${ICON_BASE}/IN.png`, ["印度", "India", "IN", "🇮🇳"]),
     createRegionTemplate("Korea", `${ICON_BASE}/KR.png`, ["韩国", "Korea", "South Korea", "KR", "🇰🇷"]),
   ];
@@ -64,60 +64,48 @@ function main(config) {
     );
   }
 
-  const regionAutoSet = new Set(regionAutoNames);
-  const dedupedProxyList = dedupe(["AUTO", ...regionSelectNames, ...regionAutoNames]);
+  const availableRegionGroups = new Set([...regionSelectNames, ...regionAutoNames]);
+  const FALLBACK_GROUP = "漏网之鱼";
+  const dedupedProxyList = dedupe([...regionSelectNames, ...regionAutoNames]);
   const proxyGroup = {
     icon: `${ICON_BASE}/Static.png`,
     "include-all": true,
     "exclude-filter": BAD_FILTER_STRING,
-    name: "PROXY",
+    name: FALLBACK_GROUP,
     type: "select",
     proxies: dedupedProxyList,
   };
-  const autoGroup = {
-    icon: `${ICON_BASE}/Urltest.png`,
-    "include-all": true,
-    "exclude-filter": BAD_FILTER_STRING,
-    name: "AUTO",
-    type: "url-test",
-    interval: 300,
-  };
-  const autoSelectGroup = {
-    icon: `${ICON_BASE}/Static.png`,
-    name: "AUTO SELECT",
-    type: "select",
-  };
-  if (canInspectProxies) {
-    autoSelectGroup.proxies = dedupe(["AUTO", ...usableProxyNames]);
-  } else {
-    autoSelectGroup["include-all"] = true;
-    autoSelectGroup["exclude-filter"] = BAD_FILTER_STRING;
-    autoSelectGroup.proxies = ["AUTO"];
-  }
-  const pickAutos = (candidates, fallback) => {
-    const filtered = candidates.filter((name) => regionAutoSet.has(name));
+  const pickRegionGroups = (candidates, fallback) => {
+    const filtered = candidates.filter((name) => availableRegionGroups.has(name));
     return filtered.length ? filtered : fallback;
   };
+  const regionCandidates = (names) => names.flatMap((name) => [`${name} AUTO`, name]);
   const aigcGroup = {
     icon: `${ICON_BASE}/OpenAI.png`,
     name: "AIGC",
     type: "select",
-    proxies: pickAutos(
-      ["SG AUTO", "JP AUTO", "US AUTO", "Korea AUTO", "India AUTO", "Malaysia AUTO", "OTHER AUTO"],
-      ["PROXY"]
+    proxies: pickRegionGroups(
+      regionCandidates(["SG", "JP", "US", "Korea", "India", "Taiwan", "OTHER"]),
+      [FALLBACK_GROUP]
     ),
   };
   const telegramGroup = {
     icon: `${ICON_BASE}/Telegram.png`,
     name: "Telegram",
     type: "select",
-    proxies: pickAutos(["HK AUTO", "SG AUTO", "JP AUTO", "US AUTO", "Korea AUTO", "OTHER AUTO"], ["PROXY"]),
+    proxies: pickRegionGroups(
+      regionCandidates(["HK", "SG", "JP", "US", "Korea", "Taiwan", "OTHER"]),
+      [FALLBACK_GROUP]
+    ),
   };
   const googleGroup = {
     icon: `${ICON_BASE}/Google.png`,
     name: "Google",
     type: "select",
-    proxies: pickAutos(["HK AUTO", "SG AUTO", "JP AUTO", "US AUTO", "Korea AUTO", "OTHER AUTO"], ["PROXY"]),
+    proxies: pickRegionGroups(
+      regionCandidates(["HK", "SG", "JP", "US", "Korea", "Taiwan", "OTHER"]),
+      [FALLBACK_GROUP]
+    ),
   };
   const globalGroup = {
     icon: `${ICON_BASE}/Global.png`,
@@ -125,13 +113,11 @@ function main(config) {
     "exclude-filter": BAD_FILTER_STRING,
     name: "GLOBAL",
     type: "select",
-    proxies: dedupe(["AUTO", ...regionAutoNames]),
+    proxies: dedupe([...regionAutoNames]),
   };
 
   config["proxy-groups"] = [
     proxyGroup,
-    autoGroup,
-    autoSelectGroup,
     aigcGroup,
     telegramGroup,
     googleGroup,

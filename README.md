@@ -11,7 +11,7 @@
 ## 代理组定义
 脚本现在把代理结构拆成“基础分组 + 地区分组”两部分，所有 `include-all` 类分组都会带上统一的 `exclude-filter`：`(?i)GB|Traffic|Expire|Premium|频道|订阅|ISP|流量|到期|重置`，避免把流量包节点加入自动选择。
 
-- 基础分组固定 6 个（PROXY/AUTO/AIGC/Telegram/Google/GLOBAL），负责常见场景调度。
+- 基础分组固定 5 个（漏网之鱼/AIGC/Telegram/Google/GLOBAL），负责兜底与常见场景。
 - 地区分组成对出现：`地区`（select 手动挑选） + `地区 AUTO`（url-test 自动测速）。当脚本检测到订阅中有对应节点才会写入；若缺少节点则整个分组直接省略。
 - “其他”分组会把未命中任何地区关键词的节点统统接管，确保长尾地区也有单独的入口。
 
@@ -21,15 +21,13 @@
 
 | 名称 | 类型 | 关键字段 | 说明 |
 | --- | --- | --- | --- |
-| PROXY | select | `include-all: true`，`proxies = AUTO + 动态地区组（地区与地区 AUTO，去重）` | 用户主用出站。即使不进入地区分组也能直接在此选择 AUTO 或特定地区。 |
-| AUTO | url-test | `include-all: true`，`interval: 300s` | 全局自动测速，延迟最低者优先。 |
-| AUTO SELECT | select | `proxies = AUTO + 全部原始节点（可用时）`，否则回落到 `include-all` | 为 AUTO 增加手动挑选入口，避免自动测速强制切换。 |
-| AIGC | select | `proxies = {SG/JP/US/Korea/India/Malaysia/OTHER AUTO} ∩ 可用组`，若均不存在则回落到 `PROXY` | 专供 OpenAI、Copilot、Claude、Bard、Bing 等 AI 服务。 |
-| Telegram | select | `proxies = {HK/SG/JP/US/Korea/OTHER AUTO} ∩ 可用组`，无可用项时指向 `PROXY` | Telegram / MTProto 优选出口。 |
-| Google | select | 同 Telegram，优先使用 HK/SG/JP/US/Korea/Other 的 AUTO 组 | Google 域名和 IP 的专用出口。 |
-| GLOBAL | select | `include-all: true`，`proxies = AUTO + 所有地区 AUTO` | 作为备用全局出站，保留所有区域的自动测速结果。 |
+| 漏网之鱼 | select | `include-all: true`，`proxies = 所有地区 AUTO + 对应非 AUTO 组` | 最终兜底出口；用户也可在此快速改选指定地区或其 AUTO。 |
+| AIGC | select | `proxies = {SG/JP/US/Korea/India/Taiwan/OTHER} × {AUTO, 非 AUTO}` 中可用项 | 专供 OpenAI、Copilot、Claude、Bard、Bing 等 AI 服务，优先使用自动测速结果，其次是手动分组。 |
+| Telegram | select | `proxies = {HK/SG/JP/US/Korea/Taiwan/OTHER} × {AUTO, 非 AUTO}` | Telegram / MTProto 优选出口，缺省回落到“漏网之鱼”。 |
+| Google | select | 同 Telegram | Google 域名和 IP 的专用出口。 |
+| GLOBAL | select | `include-all: true`，`proxies = 所有地区 AUTO` | 作为备用全局出站，保留所有区域的自动测速结果。 |
 
-> 除了上表的 `AUTO SELECT`，每个地区的 `url-test` 组也会配套生成一个同名（去掉 AUTO 的）`select` 组，保证所有 AUTO 都具备“手动锁定”入口。
+> 每个地区的 `url-test` 组都会配套生成一个同名（去掉 AUTO 的）`select` 组，默认把自动测速结果放在首位，方便手动锁定。
 
 ### 地区分组
 
@@ -46,7 +44,7 @@
 | 新加坡 | `SG` / `SG AUTO` | `(?i)新加坡|Singapore|🇸🇬` | 添加非 AUTO 组后可在 SG 内部手动切换具体节点。 |
 | 日本 | `JP` / `JP AUTO` | `(?i)日本|Japan|🇯🇵` | 同上。 |
 | 美国 | `US` / `US AUTO` | `(?i)美国|USA|US|🇺🇸` | 同上。 |
-| 马来西亚 | `Malaysia` / `Malaysia AUTO` | `(?i)马来|Malaysia|MY|🇲🇾` | 新增地区，方便 AIGC 或其他需求使用东南亚节点。 |
+| 台湾 | `Taiwan` / `Taiwan AUTO` | `(?i)台湾|台灣|Taiwan|TW|🇹🇼` | 新增地区，补齐两岸四地/亚洲常见节点。 |
 | 印度 | `India` / `India AUTO` | `(?i)印度|India|IN|🇮🇳` | 新增地区。 |
 | 韩国 | `Korea` / `Korea AUTO` | `(?i)韩国|Korea|South Korea|KR|🇰🇷` | 新增地区。 |
 | 其他 | `OTHER` / `OTHER AUTO` | `(?i).*`（配合 `exclude-filter` 排除上述所有地区） | 收拢未命中任何地区关键词的节点，保持长尾地区可用；同样会在没有节点时自动隐藏。 |
@@ -118,6 +116,6 @@ AIGC 相关规则优先，Telegram/Google 次之，随后是全局非大陆与�
 - 需要添加新的服务时，可在 `rule-providers` 里新增订阅并在 `rules` 中插入相应条目，注意排在既有规则前，以免被更宽泛的规则抢先匹配。
 - 若节点命名习惯不同，可适当修改 `exclude-filter` 或区域 `filter`，避免漏选或误选。
 - 地区分组在 `buding.js` 顶部的 `regionBlueprints` 数组维护，新增/删除地区只需增改对应的图标与关键词，同时“其他”分组会自动把剩余节点全部收入。
-- `AUTO`/区域 `url-test` 默认 300 秒测速一次，可根据网络情况调整。较低的间隔会增加流量消耗。
+- 各地区 `url-test` 默认 300 秒测速一次，可根据网络情况调整。较低的间隔会增加流量消耗。
 
 脚本的完整逻辑位于 `buding.js`，通过 `return config;` 将覆写结果交回 Mihomo，便于与原订阅进行拼接或覆盖。
