@@ -1,0 +1,31 @@
+payload:
+  # YouTube
+  - DOMAIN-SUFFIX,youtube.com
+  - DOMAIN-SUFFIX,ytimg.com
+  - DOMAIN-SUFFIX,googlevideo.com
+  - DOMAIN-SUFFIX,youtu.be
+  - DOMAIN,youtubei.googleapis.com
+
+  # Netflix
+  - DOMAIN-SUFFIX,netflix.com
+  - DOMAIN-SUFFIX,netflix.net
+  - DOMAIN-SUFFIX,nflxext.com
+  - DOMAIN-SUFFIX,nflximg.net
+  - DOMAIN-SUFFIX,nflxso.net
+  - DOMAIN-SUFFIX,nflxvideo.net
+
+  # Prime Video / Amazon
+  - DOMAIN-SUFFIX,primevideo.com
+  - DOMAIN-SUFFIX,amazonvideo.com
+  - DOMAIN-SUFFIX,media-amazon.com
+  - DOMAIN-SUFFIX,aiv-cdn.net
+
+  # Hulu
+  - DOMAIN-SUFFIX,hulu.com
+  - DOMAIN-SUFFIX,huluim.com
+  - DOMAIN-SUFFIX,hulustream.com
+
+  # Disney+ extras (common in streaming route, without Apple TV)
+  - DOMAIN-SUFFIX,disneyplus.com
+  - DOMAIN-SUFFIX,disney-plus.net
+  - DOMAIN-SUFFIX,dssott.com

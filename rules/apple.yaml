@@ -1,0 +1,16 @@
+payload:
+  - DOMAIN-SUFFIX,apple.com
+  - DOMAIN-SUFFIX,apple.com.cn
+  - DOMAIN-SUFFIX,aaplimg.com
+  - DOMAIN-SUFFIX,cdn-apple.com
+  - DOMAIN-SUFFIX,icloud.com
+  - DOMAIN-SUFFIX,icloud-content.com
+  - DOMAIN-SUFFIX,me.com
+  - DOMAIN-SUFFIX,mac.com
+  - DOMAIN-SUFFIX,apple-cloudkit.com
+  - DOMAIN-SUFFIX,apple-mapkit.com
+  - DOMAIN-SUFFIX,appleservices-itunes.com
+  - DOMAIN-SUFFIX,akadns.net
+  - DOMAIN,itunes.apple.com
+  - DOMAIN,appleid.apple.com
+  - DOMAIN,configuration.apple.com

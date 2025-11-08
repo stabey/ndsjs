@@ -1,6 +1,6 @@
 function main(config) {
   const ICON_BASE = "https://testingcf.jsdelivr.net/gh/Orz-3/mini@master/Color";
-  const BAD_KEYWORDS = ["GB", "Traffic", "Expire", "Premium", "频道", "订阅", "ISP", "流量", "到期", "重置"];
+  const BAD_KEYWORDS = ["GB", "Traffic", "Expire", "Premium", "频道", "订阅", "ISP", "流量", "到期", "重置", "剩余", "套餐"];
   const BAD_PATTERN = BAD_KEYWORDS.map(escapeRegExp).join("|");
   const BAD_FILTER_STRING = `(?i)${BAD_KEYWORDS.join("|")}`;
   const BAD_REGEX = new RegExp(BAD_PATTERN, "i");
@@ -13,6 +13,7 @@ function main(config) {
     createRegionTemplate("Taiwan", `${ICON_BASE}/TW.png`, ["台湾", "台灣", "Taiwan", "TW", "🇹🇼"]),
     createRegionTemplate("India", `${ICON_BASE}/IN.png`, ["印度", "India", "IN", "🇮🇳"]),
     createRegionTemplate("Korea", `${ICON_BASE}/KR.png`, ["韩国", "Korea", "South Korea", "KR", "🇰🇷"]),
+    createRegionTemplate("Turkey", `${ICON_BASE}/TR.png`, ["土耳其", "Turkey", "Türkiye", "TR", "🇹🇷"]),
   ];
   const otherBlueprint = {
     name: "OTHER",
@@ -66,7 +67,7 @@ function main(config) {
 
   const availableRegionGroups = new Set([...regionSelectNames, ...regionAutoNames]);
   const FALLBACK_GROUP = "漏网之鱼";
-  const dedupedProxyList = dedupe([...regionSelectNames, ...regionAutoNames]);
+  const dedupedProxyList = dedupe(["DIRECT", ...regionSelectNames, ...regionAutoNames]);
   const proxyGroup = {
     icon: `${ICON_BASE}/Static.png`,
     "include-all": true,
@@ -80,12 +81,13 @@ function main(config) {
     return filtered.length ? filtered : fallback;
   };
   const regionCandidates = (names) => names.flatMap((name) => [`${name} AUTO`, name]);
+  const streamingRegions = ["HK", "SG", "JP", "US", "Korea", "Taiwan", "Turkey", "OTHER"];
   const aigcGroup = {
     icon: `${ICON_BASE}/OpenAI.png`,
     name: "AIGC",
     type: "select",
     proxies: pickRegionGroups(
-      regionCandidates(["SG", "JP", "US", "Korea", "India", "Taiwan", "OTHER"]),
+      regionCandidates(["SG", "JP", "US", "Korea", "India", "Taiwan", "Turkey", "OTHER"]),
       [FALLBACK_GROUP]
     ),
   };
@@ -94,7 +96,7 @@ function main(config) {
     name: "Telegram",
     type: "select",
     proxies: pickRegionGroups(
-      regionCandidates(["HK", "SG", "JP", "US", "Korea", "Taiwan", "OTHER"]),
+      regionCandidates(["HK", "SG", "JP", "US", "Korea", "Taiwan", "Turkey", "OTHER"]),
       [FALLBACK_GROUP]
     ),
   };
@@ -102,10 +104,20 @@ function main(config) {
     icon: `${ICON_BASE}/Google.png`,
     name: "Google",
     type: "select",
-    proxies: pickRegionGroups(
-      regionCandidates(["HK", "SG", "JP", "US", "Korea", "Taiwan", "OTHER"]),
-      [FALLBACK_GROUP]
-    ),
+    proxies: pickRegionGroups(regionCandidates(streamingRegions), [FALLBACK_GROUP]),
+  };
+  const streamingGroup = {
+    icon: `${ICON_BASE}/Netflix.png`,
+    name: "Streaming",
+    type: "select",
+    proxies: pickRegionGroups(regionCandidates(streamingRegions), [FALLBACK_GROUP]),
+  };
+  const appleCandidates = pickRegionGroups(regionCandidates(streamingRegions), [FALLBACK_GROUP]);
+  const appleGroup = {
+    icon: `${ICON_BASE}/Apple.png`,
+    name: "Apple",
+    type: "select",
+    proxies: dedupe([...appleCandidates, "DIRECT"]),
   };
   const globalGroup = {
     icon: `${ICON_BASE}/Global.png`,
@@ -121,6 +133,8 @@ function main(config) {
     aigcGroup,
     telegramGroup,
     googleGroup,
+    streamingGroup,
+    appleGroup,
     ...dynamicGroups,
     globalGroup,
   ];
@@ -318,24 +332,51 @@ function main(config) {
       format: "yaml",
       type: "http",
     },
+    streaming_media: {
+      url: "https://raw.githubusercontent.com/stabey/ndsjs/main/rules/streaming-media.yaml",
+      path: "./ruleset/streaming-media.yaml",
+      behavior: "classical",
+      interval: 86400,
+      format: "yaml",
+      type: "http",
+    },
+    apple: {
+      url: "https://raw.githubusercontent.com/stabey/ndsjs/main/rules/apple.yaml",
+      path: "./ruleset/apple.yaml",
+      behavior: "classical",
+      interval: 86400,
+      format: "yaml",
+      type: "http",
+    },
+    steam_cn: {
+      url: "https://testingcf.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/SteamCN/SteamCN.yaml",
+      path: "./ruleset/steam_cn.yaml",
+      behavior: "classical",
+      interval: 86400,
+      format: "yaml",
+      type: "http",
+    },
   });
 
   config["rules"] = [
     "RULE-SET,private,DIRECT",
+    "RULE-SET,streaming_media,Streaming",
+    "RULE-SET,apple,Apple",
     "RULE-SET,bing,AIGC",
     "RULE-SET,copilot,AIGC",
     "RULE-SET,bard,AIGC",
     "RULE-SET,openai,AIGC",
     "RULE-SET,claude,AIGC",
-    "RULE-SET,steam,PROXY",
+    "RULE-SET,steam_cn,DIRECT",
+    "RULE-SET,steam,漏网之鱼",
     "RULE-SET,telegram_domain,Telegram",
     "RULE-SET,telegram_ip,Telegram",
     "RULE-SET,google_domain,Google",
     "RULE-SET,google_ip,Google",
-    "RULE-SET,geolocation-!cn,PROXY",
+    "RULE-SET,geolocation-!cn,漏网之鱼",
     "RULE-SET,cn_domain,DIRECT",
     "RULE-SET,cn_ip,DIRECT",
-    "MATCH,PROXY",
+    "MATCH,漏网之鱼",
   ];
   return config;
 }
