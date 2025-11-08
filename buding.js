@@ -108,6 +108,12 @@ function main(config) {
     type: "select",
     proxies: pickRegionGroups(regionCandidates(streamingRegions), [FALLBACK_GROUP]),
   };
+  const githubGroup = {
+    icon: `${ICON_BASE}/Github.png`,
+    name: "GitHub",
+    type: "select",
+    proxies: pickRegionGroups(regionCandidates(streamingRegions), [FALLBACK_GROUP]),
+  };
   const streamingGroup = {
     icon: `${ICON_BASE}/Netflix.png`,
     name: "Streaming",
@@ -136,6 +142,7 @@ function main(config) {
     aigcGroup,
     telegramGroup,
     googleGroup,
+    githubGroup,
     streamingGroup,
     appleGroup,
     globalGroup,
@@ -286,6 +293,14 @@ function main(config) {
       format: "yaml",
       type: "http",
     },
+    github: {
+      url: "https://testingcf.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Github/Github.yaml",
+      path: "./ruleset/github.yaml",
+      behavior: "classical",
+      interval: 86400,
+      format: "yaml",
+      type: "http",
+    },
     bing: {
       url: "https://testingcf.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Bing/Bing.yaml",
       path: "./ruleset/bing.yaml",
@@ -375,6 +390,7 @@ function main(config) {
     "RULE-SET,telegram_ip,Telegram",
     "RULE-SET,google_domain,Google",
     "RULE-SET,google_ip,Google",
+    "RULE-SET,github,GitHub",
     "RULE-SET,geolocation-!cn,漏网之鱼",
     "RULE-SET,cn_domain,DIRECT",
     "RULE-SET,cn_ip,DIRECT",

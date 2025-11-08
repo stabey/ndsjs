@@ -5,13 +5,13 @@
 
 脚本的所有变更点集中在以下三个部分：
 1. 重写 `proxy-groups`，把基础分组与地区分组全部脚本化，根据订阅节点实时生成。
-2. 覆盖或补全 `rule-providers`，共 17 个规则集，全部为 HTTP 类型、YAML 格式、每日（86400 秒）更新。
-3. 重新定义 `rules`，通过 18 条规则串联全部规则集，末尾使用 `MATCH,漏网之鱼` 兜底。
+2. 覆盖或补全 `rule-providers`，共 18 个规则集，全部为 HTTP 类型、YAML 格式、每日（86400 秒）更新。
+3. 重新定义 `rules`，通过 19 条规则串联全部规则集，末尾使用 `MATCH,漏网之鱼` 兜底。
 
 ## 代理组定义
 脚本现在把代理结构拆成“基础分组 + 地区分组”两部分，所有 `include-all` 类分组都会带上统一的 `exclude-filter`：`(?i)GB|Traffic|Expire|Premium|频道|订阅|ISP|流量|到期|重置|剩余|套餐`，避免把流量包或套餐节点加入自动选择。同时脚本会在生成代理组前直接从 `config.proxies` 中移除所有命中这些关键词的节点，确保客户端节点列表里也不会出现「剩余流量」「套餐到期」之类的条目。
 
-- 基础分组固定 6 个（漏网之鱼/AIGC/Telegram/Google/Streaming/Apple/GLOBAL），负责兜底与常见场景。
+- 基础分组固定 8 个（漏网之鱼/AIGC/Telegram/Google/GitHub/Streaming/Apple/GLOBAL），负责兜底与常见场景。
 - 地区分组成对出现：`地区`（select 手动挑选） + `地区 AUTO`（url-test 自动测速）。当脚本检测到订阅中有对应节点才会写入；若缺少节点则整个分组直接省略。
 - “其他”分组会把未命中任何地区关键词的节点统统接管，确保长尾地区也有单独的入口。
 
@@ -21,10 +21,11 @@
 
 | 名称 | 类型 | 关键字段 | 说明 |
 | --- | --- | --- | --- |
-| 漏网之鱼 | select | `include-all: true`，`proxies = DIRECT + 所有地区 AUTO/非 AUTO` | 最终兜底出口，多增加一个 `DIRECT` 选项。 |
+| 漏网之鱼 | select | `proxies = DIRECT + 所有地区 AUTO/非 AUTO` | 最终兜底出口，多增加一个 `DIRECT` 选项。 |
 | AIGC | select | `proxies = {SG/JP/US/Korea/India/Taiwan/Turkey/OTHER} × {AUTO, 非 AUTO}` 中可用项 | 专供 OpenAI、Copilot、Claude、Bard、Bing 等 AI 服务。 |
 | Telegram | select | `proxies = {HK/SG/JP/US/Korea/Taiwan/Turkey/OTHER} × {AUTO, 非 AUTO}` | Telegram / MTProto 优选出口，缺省回落到“漏网之鱼”。 |
 | Google | select | `proxies = {HK/SG/JP/US/Korea/Taiwan/Turkey/OTHER} × {AUTO, 非 AUTO}` | Google 域名和 IP 的专用出口。 |
+| GitHub | select | 同 Google | 针对 GitHub/GitHubusercontent 流量提供快捷分流。 |
 | Streaming | select | 同 Google | 将 YouTube / Netflix / Prime Video / Hulu / Disney+ 等统一指向该组。 |
 | Apple | select | 同 Google 但额外附加 `DIRECT` 选项 | 所有苹果相关域名/服务可以直接或分流到任意地区。 |
 | GLOBAL | select | `include-all: true`，`proxies = 所有地区 AUTO` | 作为备用全局出站，保留所有区域的自动测速结果。 |
@@ -67,6 +68,7 @@
 | cn_ip | ipcidr | https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/cn.yaml | ./ruleset/cn_ip.yaml | 中国大陆 IP，DIRECT。 |
 | telegram_ip | ipcidr | https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/telegram.yaml | ./ruleset/telegram_ip.yaml | Telegram IP 段，Telegram 代理组。 |
 | google_ip | ipcidr | https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/google.yaml | ./ruleset/google_ip.yaml | Google IP 段，Google 代理组。 |
+| github | classical | https://testingcf.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Github/Github.yaml | ./ruleset/github.yaml | GitHub 及附件下载，走 GitHub 分组。 |
 | bing | classical | https://testingcf.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Bing/Bing.yaml | ./ruleset/bing.yaml | Bing AI / 搜索，归类到 AIGC。 |
 | copilot | classical | https://testingcf.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Copilot/Copilot.yaml | ./ruleset/copilot.yaml | Microsoft Copilot，AIGC 代理。 |
 | claude | classical | https://testingcf.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Claude/Claude.yaml | ./ruleset/claude.yaml | Anthropic Claude，AIGC 代理。 |
@@ -95,10 +97,11 @@
 12. `RULE-SET,telegram_ip,Telegram`
 13. `RULE-SET,google_domain,Google`
 14. `RULE-SET,google_ip,Google`
-15. `RULE-SET,geolocation-!cn,漏网之鱼`
-16. `RULE-SET,cn_domain,DIRECT`
-17. `RULE-SET,cn_ip,DIRECT`
-18. `MATCH,漏网之鱼` — 兜底走主代理组。
+15. `RULE-SET,github,GitHub`
+16. `RULE-SET,geolocation-!cn,漏网之鱼`
+17. `RULE-SET,cn_domain,DIRECT`
+18. `RULE-SET,cn_ip,DIRECT`
+19. `MATCH,漏网之鱼` — 兜底走主代理组。
 
 新增的流媒体/Apple/Steam CN 规则优先处理特定场景，AIGC 次之，随后是 Telegram/Google/全球与大陆分流，最终由“漏网之鱼”收尾。
 
