@@ -74,8 +74,6 @@ function main(config) {
   const dedupedProxyList = dedupe(["DIRECT", ...regionSelectNames, ...regionAutoNames]);
   const proxyGroup = {
     icon: `${ICON_BASE}/Static.png`,
-    "include-all": true,
-    "exclude-filter": BAD_FILTER_STRING,
     name: FALLBACK_GROUP,
     type: "select",
     proxies: dedupedProxyList,
@@ -133,13 +131,13 @@ function main(config) {
   };
 
   config["proxy-groups"] = [
+    ...dynamicGroups,
     proxyGroup,
     aigcGroup,
     telegramGroup,
     googleGroup,
     streamingGroup,
     appleGroup,
-    ...dynamicGroups,
     globalGroup,
   ];
 
