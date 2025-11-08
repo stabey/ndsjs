@@ -30,7 +30,7 @@
 | Apple | select | 同 Google 但额外附加 `DIRECT` 选项 | 所有苹果相关域名/服务可以直接或分流到任意地区。 |
 | GLOBAL | select | `include-all: true`，`proxies = 所有地区 AUTO` | 作为备用全局出站，保留所有区域的自动测速结果。 |
 
-> 每个地区的 `url-test` 组都会配套生成一个同名（去掉 AUTO 的）`select` 组，默认把自动测速结果放在首位，方便手动锁定。
+> 每个地区的 `url-test` 组都会配套生成一个同名（去掉 AUTO 的）`select` 组，默认把自动测速结果放在首位，方便手动锁定。测速使用统一的 `https://cp.cloudflare.com/generate_204` 端点（Clash/Mihomo 兼容，Stash 亦可覆盖该 URL）。 
 
 ### 地区分组
 

@@ -1,5 +1,6 @@
 function main(config) {
   const ICON_BASE = "https://testingcf.jsdelivr.net/gh/Orz-3/mini@master/Color";
+  const URL_TEST_ENDPOINT = "https://cp.cloudflare.com/generate_204";
   const BAD_KEYWORDS = ["GB", "Traffic", "Expire", "Premium", "频道", "订阅", "ISP", "流量", "到期", "重置", "剩余", "套餐"];
   const BAD_PATTERN = BAD_KEYWORDS.map(escapeRegExp).join("|");
   const BAD_FILTER_STRING = `(?i)${BAD_KEYWORDS.join("|")}`;
@@ -193,6 +194,7 @@ function main(config) {
       name,
       type: "url-test",
       interval: 300,
+      url: URL_TEST_ENDPOINT,
     };
     if (canInspectProxies) {
       group.proxies = nodes;
