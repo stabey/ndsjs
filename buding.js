@@ -294,7 +294,7 @@ function main(config) {
       type: "http",
     },
     github: {
-      url: "https://testingcf.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Github/Github.yaml",
+      url: "https://raw.githubusercontent.com/stabey/ndsjs/main/rules/github.yaml",
       path: "./ruleset/github.yaml",
       behavior: "classical",
       interval: 86400,

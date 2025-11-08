@@ -68,7 +68,7 @@
 | cn_ip | ipcidr | https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/cn.yaml | ./ruleset/cn_ip.yaml | 中国大陆 IP，DIRECT。 |
 | telegram_ip | ipcidr | https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/telegram.yaml | ./ruleset/telegram_ip.yaml | Telegram IP 段，Telegram 代理组。 |
 | google_ip | ipcidr | https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/google.yaml | ./ruleset/google_ip.yaml | Google IP 段，Google 代理组。 |
-| github | classical | https://testingcf.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Github/Github.yaml | ./ruleset/github.yaml | GitHub 及附件下载，走 GitHub 分组。 |
+| github | classical | https://raw.githubusercontent.com/stabey/ndsjs/main/rules/github.yaml | ./ruleset/github.yaml | 仓库自带 GitHub 域名合集（github.com / githubusercontent 等），走 GitHub 分组。 |
 | bing | classical | https://testingcf.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Bing/Bing.yaml | ./ruleset/bing.yaml | Bing AI / 搜索，归类到 AIGC。 |
 | copilot | classical | https://testingcf.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Copilot/Copilot.yaml | ./ruleset/copilot.yaml | Microsoft Copilot，AIGC 代理。 |
 | claude | classical | https://testingcf.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Claude/Claude.yaml | ./ruleset/claude.yaml | Anthropic Claude，AIGC 代理。 |
@@ -128,7 +128,7 @@
 - 需要添加新的服务时，可在 `rule-providers` 里新增订阅并在 `rules` 中插入相应条目，注意排在既有规则前，以免被更宽泛的规则抢先匹配。
 - 若节点命名习惯不同，可适当修改 `exclude-filter` 或区域 `filter`，避免漏选或误选。
 - 地区分组在 `buding.js` 顶部的 `regionBlueprints` 数组维护，新增/删除地区只需增改对应的图标与关键词，同时“其他”分组会自动把剩余节点全部收入。
-- `rules/streaming-media.yaml` 与 `rules/apple.yaml` 位于本仓库，可自行扩充域名；脚本会引用 `raw.githubusercontent.com` 获取最新内容。
+- `rules/streaming-media.yaml`、`rules/apple.yaml`、`rules/github.yaml` 位于本仓库，可自行扩充域名；脚本会引用 `raw.githubusercontent.com` 获取最新内容。
 - 各地区 `url-test` 默认 300 秒测速一次，可根据网络情况调整。较低的间隔会增加流量消耗。
 
 脚本的完整逻辑位于 `buding.js`，通过 `return config;` 将覆写结果交回 Mihomo，便于与原订阅进行拼接或覆盖。

@@ -1,0 +1,11 @@
+payload:
+  - DOMAIN-SUFFIX,github.com
+  - DOMAIN-SUFFIX,githubusercontent.com
+  - DOMAIN-SUFFIX,githubassets.com
+  - DOMAIN-SUFFIX,githubapp.com
+  - DOMAIN-SUFFIX,ghtorrent.org
+  - DOMAIN-SUFFIX,ghcr.io
+  - DOMAIN-SUFFIX,rawgit.com
+  - DOMAIN-SUFFIX,git.io
+  - DOMAIN-SUFFIX,npmjs.org
+  - DOMAIN-SUFFIX,npmjs.com
