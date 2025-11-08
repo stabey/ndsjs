@@ -15,7 +15,7 @@
 - 地区分组成对出现：`地区`（select 手动挑选） + `地区 AUTO`（url-test 自动测速）。当脚本检测到订阅中有对应节点才会写入；若缺少节点则整个分组直接省略。
 - “其他”分组会把未命中任何地区关键词的节点统统接管，确保长尾地区也有单独的入口。
 
-> 检测逻辑基于 `config.proxies` 中的节点名称。如果订阅只提供 `proxy-providers` 而暂未给出具体节点，脚本会自动退回旧的 `include-all + filter` 方案，此时代码无法判断哪些地区为空，分组会全部显示。
+> 检测逻辑优先读取 `config.proxies` 中的节点名称；若订阅只提供 `proxy-providers`，脚本会自动给所有区域分组绑定全部 provider（`use: <provider name>`）并配合 `filter` 选项筛选，兼容 FlClash 此类需要 provider 信息的客户端。
 
 ### 基础分组
 

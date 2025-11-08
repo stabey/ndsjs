@@ -22,6 +22,10 @@ function main(config) {
   };
   const regionKeywordPattern = regionBlueprints.map((item) => item.pattern).join("|");
   const otherExcludeFilter = `(?i)${BAD_KEYWORDS.join("|")}${regionKeywordPattern ? `|${regionKeywordPattern}` : ""}`;
+  const providerNames = config["proxy-providers"]
+    ? Object.keys(config["proxy-providers"]).filter((name) => typeof name === "string" && name.length > 0)
+    : [];
+  const canUseProviders = providerNames.length > 0;
 
   if (Array.isArray(config.proxies)) {
     config.proxies = config.proxies.filter(
@@ -171,10 +175,14 @@ function main(config) {
     if (canInspectProxies) {
       group.proxies = [autoName, ...nodes];
     } else {
-      group["include-all"] = true;
       group["exclude-filter"] = excludeFilter;
       if (filter) {
         group.filter = filter;
+      }
+      if (canUseProviders) {
+        group.use = providerNames;
+      } else {
+        group["include-all"] = true;
       }
       group.proxies = [autoName];
     }
@@ -191,10 +199,14 @@ function main(config) {
     if (canInspectProxies) {
       group.proxies = nodes;
     } else {
-      group["include-all"] = true;
       group["exclude-filter"] = excludeFilter;
       if (filter) {
         group.filter = filter;
+      }
+      if (canUseProviders) {
+        group.use = providerNames;
+      } else {
+        group["include-all"] = true;
       }
     }
     return group;
