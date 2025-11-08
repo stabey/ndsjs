@@ -4,7 +4,7 @@
 `buding.js` 是一个用于 Mihomo / Clash.Meta 的覆写（override）脚本。它通过导出的 `main(config)` 函数直接修改传入的配置对象，统一定义代理组、规则集订阅以及路由顺序，确保不同场景（AIGC、Telegram、Google、区域优选等）具有明确、可维护的分流策略。
 
 脚本的所有变更点集中在以下三个部分：
-1. 重写 `proxy-groups`，提供 10 组节点选择/探测策略。
+1. 重写 `proxy-groups`，把基础分组与地区分组全部脚本化，根据订阅节点实时生成。
 2. 覆盖或补全 `rule-providers`，共 14 个规则集，全部为 HTTP 类型、YAML 格式、每日（86400 秒）更新。
 3. 重新定义 `rules`，通过 15 条规则串联全部规则集，末尾使用 `MATCH,PROXY` 兜底。
 
@@ -23,10 +23,13 @@
 | --- | --- | --- | --- |
 | PROXY | select | `include-all: true`，`proxies = AUTO + 动态地区组（地区与地区 AUTO，去重）` | 用户主用出站。即使不进入地区分组也能直接在此选择 AUTO 或特定地区。 |
 | AUTO | url-test | `include-all: true`，`interval: 300s` | 全局自动测速，延迟最低者优先。 |
+| AUTO SELECT | select | `proxies = AUTO + 全部原始节点（可用时）`，否则回落到 `include-all` | 为 AUTO 增加手动挑选入口，避免自动测速强制切换。 |
 | AIGC | select | `proxies = {SG/JP/US/Korea/India/Malaysia/OTHER AUTO} ∩ 可用组`，若均不存在则回落到 `PROXY` | 专供 OpenAI、Copilot、Claude、Bard、Bing 等 AI 服务。 |
 | Telegram | select | `proxies = {HK/SG/JP/US/Korea/OTHER AUTO} ∩ 可用组`，无可用项时指向 `PROXY` | Telegram / MTProto 优选出口。 |
 | Google | select | 同 Telegram，优先使用 HK/SG/JP/US/Korea/Other 的 AUTO 组 | Google 域名和 IP 的专用出口。 |
 | GLOBAL | select | `include-all: true`，`proxies = AUTO + 所有地区 AUTO` | 作为备用全局出站，保留所有区域的自动测速结果。 |
+
+> 除了上表的 `AUTO SELECT`，每个地区的 `url-test` 组也会配套生成一个同名（去掉 AUTO 的）`select` 组，保证所有 AUTO 都具备“手动锁定”入口。
 
 ### 地区分组
 

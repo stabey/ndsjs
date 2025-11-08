@@ -82,6 +82,18 @@ function main(config) {
     type: "url-test",
     interval: 300,
   };
+  const autoSelectGroup = {
+    icon: `${ICON_BASE}/Static.png`,
+    name: "AUTO SELECT",
+    type: "select",
+  };
+  if (canInspectProxies) {
+    autoSelectGroup.proxies = dedupe(["AUTO", ...usableProxyNames]);
+  } else {
+    autoSelectGroup["include-all"] = true;
+    autoSelectGroup["exclude-filter"] = BAD_FILTER_STRING;
+    autoSelectGroup.proxies = ["AUTO"];
+  }
   const pickAutos = (candidates, fallback) => {
     const filtered = candidates.filter((name) => regionAutoSet.has(name));
     return filtered.length ? filtered : fallback;
@@ -119,6 +131,7 @@ function main(config) {
   config["proxy-groups"] = [
     proxyGroup,
     autoGroup,
+    autoSelectGroup,
     aigcGroup,
     telegramGroup,
     googleGroup,
