@@ -179,9 +179,7 @@ function main(config) {
       if (filter) {
         group.filter = filter;
       }
-      if (canUseProviders) {
-        group.use = providerNames;
-      } else {
+      if (!canUseProviders) {
         group["include-all"] = true;
       }
       group.proxies = [autoName];
