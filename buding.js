@@ -41,7 +41,8 @@ function main(config) {
   const canInspectProxies = usableProxyNames.length > 0;
   const remainingNames = canInspectProxies ? new Set(usableProxyNames) : null;
 
-  const dynamicGroups = [];
+  const regionAutoGroups = [];
+  const regionSelectGroups = [];
   const regionSelectNames = [];
   const regionAutoNames = [];
 
@@ -64,7 +65,8 @@ function main(config) {
       BAD_FILTER_STRING,
       nodes
     );
-    dynamicGroups.push(autoGroup, selectGroup);
+    regionAutoGroups.push(autoGroup);
+    regionSelectGroups.push(selectGroup);
   });
 
   const otherNodes = canInspectProxies && remainingNames ? Array.from(remainingNames) : [];
@@ -89,7 +91,8 @@ function main(config) {
       otherExcludeFilter,
       otherNodes
     );
-    dynamicGroups.push(otherAutoGroup, otherSelectGroup);
+    regionAutoGroups.push(otherAutoGroup);
+    regionSelectGroups.push(otherSelectGroup);
   }
 
   const availableRegionGroups = new Set([...regionSelectNames, ...regionAutoNames]);
@@ -160,7 +163,8 @@ function main(config) {
   };
 
   config["proxy-groups"] = [
-    ...dynamicGroups,
+    ...regionAutoGroups,
+    ...regionSelectGroups,
     proxyGroup,
     aigcGroup,
     telegramGroup,
