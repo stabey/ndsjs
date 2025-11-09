@@ -55,10 +55,16 @@ function main(config) {
     const autoName = `${blueprint.name} AUTO`;
     regionSelectNames.push(selectName);
     regionAutoNames.push(autoName);
-    dynamicGroups.push(
-      createSelectGroup(selectName, blueprint.icon, autoName, blueprint.filter, BAD_FILTER_STRING, nodes),
-      createAutoGroup(autoName, blueprint.icon, blueprint.filter, BAD_FILTER_STRING, nodes)
+    const autoGroup = createAutoGroup(autoName, blueprint.icon, blueprint.filter, BAD_FILTER_STRING, nodes);
+    const selectGroup = createSelectGroup(
+      selectName,
+      blueprint.icon,
+      autoName,
+      blueprint.filter,
+      BAD_FILTER_STRING,
+      nodes
     );
+    dynamicGroups.push(autoGroup, selectGroup);
   });
 
   const otherNodes = canInspectProxies && remainingNames ? Array.from(remainingNames) : [];
@@ -68,10 +74,22 @@ function main(config) {
     const otherAutoName = `${otherBlueprint.name} AUTO`;
     regionSelectNames.push(otherSelectName);
     regionAutoNames.push(otherAutoName);
-    dynamicGroups.push(
-      createSelectGroup(otherSelectName, otherBlueprint.icon, otherAutoName, otherBlueprint.filter, otherExcludeFilter, otherNodes),
-      createAutoGroup(otherAutoName, otherBlueprint.icon, otherBlueprint.filter, otherExcludeFilter, otherNodes)
+    const otherAutoGroup = createAutoGroup(
+      otherAutoName,
+      otherBlueprint.icon,
+      otherBlueprint.filter,
+      otherExcludeFilter,
+      otherNodes
     );
+    const otherSelectGroup = createSelectGroup(
+      otherSelectName,
+      otherBlueprint.icon,
+      otherAutoName,
+      otherBlueprint.filter,
+      otherExcludeFilter,
+      otherNodes
+    );
+    dynamicGroups.push(otherAutoGroup, otherSelectGroup);
   }
 
   const availableRegionGroups = new Set([...regionSelectNames, ...regionAutoNames]);
