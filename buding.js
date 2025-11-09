@@ -103,6 +103,8 @@ function main(config) {
     "AIGC",
     "Telegram",
     "Google",
+    "Steam",
+    "其他国外",
     "GitHub",
     "Streaming",
     "Apple",
@@ -138,11 +140,24 @@ function main(config) {
       [FALLBACK_GROUP]
     ),
   };
+  const googleProxyCandidates = pickRegionGroups(regionCandidates(streamingRegions), [FALLBACK_GROUP]);
   const googleGroup = {
     icon: `${ICON_BASE}/Google.png`,
     name: "Google",
     type: "select",
-    proxies: pickRegionGroups(regionCandidates(streamingRegions), [FALLBACK_GROUP]),
+    proxies: googleProxyCandidates,
+  };
+  const steamGroup = {
+    icon: `${ICON_BASE}/Steam.png`,
+    name: "Steam",
+    type: "select",
+    proxies: dedupe([...googleProxyCandidates, "DIRECT"]),
+  };
+  const otherForeignGroup = {
+    icon: `${ICON_BASE}/Global.png`,
+    name: "其他国外",
+    type: "select",
+    proxies: dedupe([...googleProxyCandidates, "DIRECT"]),
   };
   const githubGroup = {
     icon: `${ICON_BASE}/Github.png`,
@@ -187,6 +202,8 @@ function main(config) {
     aigcGroup,
     telegramGroup,
     googleGroup,
+    steamGroup,
+    otherForeignGroup,
     githubGroup,
     PTGroup,
     streamingGroup,
@@ -394,6 +411,14 @@ function main(config) {
       format: "yaml",
       type: "http",
     },
+    gemini: {
+      url: "https://testingcf.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Gemini/Gemini.yaml",
+      path: "./ruleset/gemini.yaml",
+      behavior: "classical",
+      interval: 86400,
+      format: "yaml",
+      type: "http",
+    },
     openai: {
       url: "https://testingcf.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/OpenAI/OpenAI.yaml",
       path: "./ruleset/openai.yaml",
@@ -443,17 +468,18 @@ function main(config) {
     "RULE-SET,bing,AIGC",
     "RULE-SET,copilot,AIGC",
     "RULE-SET,bard,AIGC",
+    "RULE-SET,gemini,AIGC",
     "RULE-SET,openai,AIGC",
     "RULE-SET,claude,AIGC",
     "RULE-SET,steam_cn,DIRECT",
-    "RULE-SET,steam,漏网之鱼",
+    "RULE-SET,steam,Steam",
     "RULE-SET,telegram_domain,Telegram",
     "RULE-SET,telegram_ip,Telegram",
     "RULE-SET,google_domain,Google",
     "RULE-SET,google_ip,Google",
     "RULE-SET,github,GitHub",
     "RULE-SET,pt_site,PT",
-    "RULE-SET,geolocation-!cn,漏网之鱼",
+    "RULE-SET,geolocation-!cn,其他国外",
     "RULE-SET,cn_domain,DIRECT",
     "RULE-SET,cn_ip,DIRECT",
     "MATCH,漏网之鱼",
