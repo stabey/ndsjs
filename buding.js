@@ -98,6 +98,15 @@ function main(config) {
   const availableRegionGroups = new Set([...regionSelectNames, ...regionAutoNames]);
   const FALLBACK_GROUP = "漏网之鱼";
   const dedupedProxyList = dedupe(["DIRECT", ...regionSelectNames, ...regionAutoNames]);
+  const scenarioGroupNames = [
+    FALLBACK_GROUP,
+    "AIGC",
+    "Telegram",
+    "Google",
+    "GitHub",
+    "Streaming",
+    "Apple",
+  ];
   const proxyGroup = {
     icon: `${ICON_BASE}/Static.png`,
     name: FALLBACK_GROUP,
@@ -153,13 +162,14 @@ function main(config) {
     type: "select",
     proxies: dedupe([...appleCandidates, "DIRECT"]),
   };
+  const globalMembers = dedupe([...regionAutoNames, ...regionSelectNames, ...scenarioGroupNames]);
   const globalGroup = {
     icon: `${ICON_BASE}/Global.png`,
     "include-all": true,
     "exclude-filter": BAD_FILTER_STRING,
     name: "GLOBAL",
     type: "select",
-    proxies: dedupe([...regionAutoNames]),
+    proxies: globalMembers,
   };
 
   config["proxy-groups"] = [

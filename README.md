@@ -15,6 +15,7 @@
 - 地区分组成对出现：`地区`（select 手动挑选） + `地区 AUTO`（url-test 自动测速）。当脚本检测到订阅中有对应节点才会写入；若缺少节点则整个分组直接省略。
 - “其他”分组会把未命中任何地区关键词的节点统统接管，确保长尾地区也有单独的入口。
 - 兼容 FlClash 等按顺序解析分组的客户端：脚本会先写入所有 `地区 AUTO`（url-test）组，再写入对应的 `select` 组，避免 `HK` 等手动组在解析时引用尚未定义的 `HK AUTO` 而被客户端丢弃。
+- `GLOBAL` 组会把全部地区分组（AUTO + 手动）和基础场景分组（漏网之鱼/AIGC/Telegram/Google/GitHub/Streaming/Apple）统统列进 `proxies`，方便 FlClash 这种只读取 `GLOBAL.all` 的客户端把所有策略都渲染出来。
 
 > 检测逻辑优先读取 `config.proxies` 中的节点名称；若订阅只提供 `proxy-providers`，脚本会给所有 `url-test` 地区组绑定 provider（`use: <provider name>`）并配合 `filter` 选项筛选，`select` 组则继续引用对应的 `AUTO` 组，兼容 FlClash 等需要 provider 信息的客户端。
 
