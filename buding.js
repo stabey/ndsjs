@@ -106,6 +106,7 @@ function main(config) {
     "GitHub",
     "Streaming",
     "Apple",
+    "PT",
   ];
   const proxyGroup = {
     icon: `${ICON_BASE}/Static.png`,
