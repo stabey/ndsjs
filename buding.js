@@ -59,17 +59,21 @@ function main(config) {
     const selectName = blueprint.name;
     const autoName = `${blueprint.name} AUTO`;
     regionSelectNames.push(selectName);
-    regionAutoNames.push(autoName);
-    const autoGroup = createAutoGroup(autoName, blueprint.icon, blueprint.filter, BAD_FILTER_STRING, nodes);
+    const autoNodes = canInspectProxies ? sanitizeAutoNodes(nodes) : nodes;
+    const shouldCreateAutoGroup = !canInspectProxies || autoNodes.length > 0;
+    if (shouldCreateAutoGroup) {
+      regionAutoNames.push(autoName);
+      const autoGroup = createAutoGroup(autoName, blueprint.icon, blueprint.filter, BAD_FILTER_STRING, autoNodes);
+      regionAutoGroups.push(autoGroup);
+    }
     const selectGroup = createSelectGroup(
       selectName,
       blueprint.icon,
-      autoName,
+      shouldCreateAutoGroup ? autoName : null,
       blueprint.filter,
       BAD_FILTER_STRING,
       nodes
     );
-    regionAutoGroups.push(autoGroup);
     regionSelectGroups.push(selectGroup);
   });
 
@@ -79,23 +83,27 @@ function main(config) {
     const otherSelectName = otherBlueprint.name;
     const otherAutoName = `${otherBlueprint.name} AUTO`;
     regionSelectNames.push(otherSelectName);
-    regionAutoNames.push(otherAutoName);
-    const otherAutoGroup = createAutoGroup(
-      otherAutoName,
-      otherBlueprint.icon,
-      otherBlueprint.filter,
-      otherExcludeFilter,
-      otherNodes
-    );
+    const otherAutoNodes = canInspectProxies ? sanitizeAutoNodes(otherNodes) : otherNodes;
+    const shouldCreateOtherAutoGroup = !canInspectProxies || otherAutoNodes.length > 0;
+    if (shouldCreateOtherAutoGroup) {
+      regionAutoNames.push(otherAutoName);
+      const otherAutoGroup = createAutoGroup(
+        otherAutoName,
+        otherBlueprint.icon,
+        otherBlueprint.filter,
+        otherExcludeFilter,
+        otherAutoNodes
+      );
+      regionAutoGroups.push(otherAutoGroup);
+    }
     const otherSelectGroup = createSelectGroup(
       otherSelectName,
       otherBlueprint.icon,
-      otherAutoName,
+      shouldCreateOtherAutoGroup ? otherAutoName : null,
       otherBlueprint.filter,
       otherExcludeFilter,
       otherNodes
     );
-    regionAutoGroups.push(otherAutoGroup);
     regionSelectGroups.push(otherSelectGroup);
   }
 
@@ -236,7 +244,14 @@ function main(config) {
       type: "select",
     };
     if (canInspectProxies) {
-      group.proxies = [autoName, ...nodes];
+      const proxies = [];
+      if (autoName) {
+        proxies.push(autoName);
+      }
+      if (Array.isArray(nodes) && nodes.length > 0) {
+        proxies.push(...nodes);
+      }
+      group.proxies = proxies;
     } else {
       group["exclude-filter"] = excludeFilter;
       if (filter) {
@@ -245,7 +260,7 @@ function main(config) {
       if (!canUseProviders) {
         group["include-all"] = true;
       }
-      group.proxies = [autoName];
+      group.proxies = autoName ? [autoName] : [];
     }
     return group;
   }
