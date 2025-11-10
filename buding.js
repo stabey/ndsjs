@@ -5,6 +5,10 @@ function main(config) {
   const BAD_PATTERN = BAD_KEYWORDS.map(escapeRegExp).join("|");
   const BAD_FILTER_STRING = `(?i)${BAD_KEYWORDS.join("|")}`;
   const BAD_REGEX = new RegExp(BAD_PATTERN, "i");
+  const AUTO_EXCLUDE_KEYWORDS = ["V1", "V0"];
+  const AUTO_EXCLUDE_PATTERN = AUTO_EXCLUDE_KEYWORDS.map(escapeRegExp).join("|");
+  const AUTO_EXCLUDE_REGEX = new RegExp(AUTO_EXCLUDE_PATTERN, "i");
+  const AUTO_EXCLUDE_FILTER = `(?i)${AUTO_EXCLUDE_KEYWORDS.join("|")}`;
 
   const regionBlueprints = [
     createRegionTemplate("HK", `${ICON_BASE}/HK.png`, ["香港", "Hong Kong", "HK", "🇭🇰"]),
@@ -255,9 +259,12 @@ function main(config) {
       url: URL_TEST_ENDPOINT,
     };
     if (canInspectProxies) {
-      group.proxies = nodes;
+      group.proxies = sanitizeAutoNodes(nodes);
     } else {
-      group["exclude-filter"] = excludeFilter;
+      const mergedExcludeFilter = mergeExcludeFilters(excludeFilter, AUTO_EXCLUDE_FILTER);
+      if (mergedExcludeFilter) {
+        group["exclude-filter"] = mergedExcludeFilter;
+      }
       if (filter) {
         group.filter = filter;
       }
@@ -290,6 +297,17 @@ function main(config) {
       seen.add(item);
       return true;
     });
+  }
+
+  function sanitizeAutoNodes(nodes) {
+    if (!Array.isArray(nodes)) {
+      return [];
+    }
+    return nodes.filter((name) => typeof name === "string" && !AUTO_EXCLUDE_REGEX.test(name));
+  }
+
+  function mergeExcludeFilters(...filters) {
+    return filters.filter((item) => typeof item === "string" && item.length > 0).join("|");
   }
 
   function escapeRegExp(str) {
